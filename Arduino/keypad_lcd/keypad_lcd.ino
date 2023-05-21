@@ -9,6 +9,8 @@
 #include <WiFiClient.h>
 // include Keypad Display Library
 #include <Keypad.h>
+// include hashes library
+#include <Hash.h>
 
 const byte n_rows = 4;
 const byte n_cols = 4;
@@ -22,18 +24,29 @@ char keys[n_rows][n_cols] = {
 byte colPins[n_rows] = {D6, D5, D2, D0};
 byte rowPins[n_cols] = {0, D9, D8, D7};
 
+const int PIN_TO_SENSOR = D2;   // the pin that OUTPUT pin of sensor is connected to
+int pinStateCurrent   = LOW; // current state of pin
+int pinStatePrevious  = LOW; // previous state of pin
+int detectionCount = 0;
+
 // Objects Creation
 LiquidCrystal_I2C lcd(0x3F, 16, 2);
 Keypad myKeypad = Keypad( makeKeymap(keys), rowPins, colPins, n_rows, n_cols);
 ESP8266WiFiMulti WiFiMulti;
+WiFiClient client;
+HTTPClient http;
 
 int digitsLength = 0;
 const int MAX_DIGITS = 4;
-String ifiagCode;
+String ifiagCode = "";
 String requestURI;
 
-char* Wifi_SSID = "TP-LINK_2AFB42";
-char* Wifi_PSWD = "7q8jhv6a";
+char* Wifi_SSID = "SUNWAY 1";
+char* Wifi_PSWD = "22222222";
+
+const String FIRST_CHALLENGES[3] = {"5555", "2222", "1111"};
+const String SECOND_CHALLENGES[4] = {"miolkpfiklormtitrla", "mpolkifikyhdbyzla", "myogkufpniekslss", "mroikrfirpbuel3"};
+String first_challenge_uri = "";
 
 void setup()
 {
@@ -43,7 +56,20 @@ void setup()
   home();
 
   WiFi.mode(WIFI_STA);
-  WiFiMulti.addAP(Wifi_SSID, Wifi_PSWD);
+  WiFi.begin(Wifi_SSID, Wifi_PSWD);
+
+  while(true) {
+    pinStatePrevious = pinStateCurrent; // store old state
+    pinStateCurrent = digitalRead(PIN_TO_SENSOR);   // read new state
+
+    if (pinStatePrevious == LOW && pinStateCurrent == HIGH) {
+      Serial.println("Motion detected!");
+      digitalWrite(LED_BUILTIN, LOW);
+      first_challenge_uri = "http://192.168.1.123:8080/?code="+FIRST_CHALLENGES[random(3)];
+      http.begin(client, first_challenge_uri);
+      delay(30000);
+    }
+  }
 }
 
 void loop()
@@ -64,9 +90,8 @@ void loop()
         lcd.setCursor(0, 1);
         lcd.print(ifiagCode);
       } else if (digitsLength == MAX_DIGITS && digitsLength >= 1 && myKey == 'C' && myKey != 'D') {
-        WiFiClient client;
-        HTTPClient http;
-        requestURI = "http://192.168.1.50:5678/?code="+ifiagCode;
+        ifiagCode = sha1(ifiagCode);
+        requestURI = "http://192.168.100.27:8080/?code="+ifiagCode;
         if (http.begin(client, requestURI)) {
           int httpResponseCode = http.GET();
           if (httpResponseCode == 200) {
