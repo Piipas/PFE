@@ -33,23 +33,27 @@ int detectionCount = 0;
 LiquidCrystal_I2C lcd(0x3F, 16, 2);
 Keypad myKeypad = Keypad( makeKeymap(keys), rowPins, colPins, n_rows, n_cols);
 ESP8266WiFiMulti WiFiMulti;
-WiFiClient client;
-HTTPClient http;
 
 int digitsLength = 0;
 const int MAX_DIGITS = 4;
 String ifiagCode = "";
+String ifiagChallenged = "";
 String requestURI;
+String proposedSecondChallenge = "";
+bool is_second_challenge_valid = false;
 
-char* Wifi_SSID = "SUNWAY 1";
-char* Wifi_PSWD = "22222222";
+char* Wifi_SSID = "TP-LINK_2AFB42";
+char* Wifi_PSWD = "7q8jhv6a";
 
 const String FIRST_CHALLENGES[3] = {"5555", "2222", "1111"};
 const String SECOND_CHALLENGES[4] = {"miolkpfiklormtitrla", "mpolkifikyhdbyzla", "myogkufpniekslss", "mroikrfirpbuel3"};
 String first_challenge_uri = "";
 
-void setup()
-{
+IPAddress subnet(255, 255, 255, 0);
+IPAddress gateway(192, 168, 1, 1);
+IPAddress local_IP(192, 168, 1, 184);
+
+void setup() {
   Serial.begin(115200);
   lcd.init();
   lcd.backlight();
@@ -57,23 +61,38 @@ void setup()
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(Wifi_SSID, Wifi_PSWD);
+  WiFi.config(local_IP, gateway, subnet);
 
   while(true) {
-    pinStatePrevious = pinStateCurrent; // store old state
-    pinStateCurrent = digitalRead(PIN_TO_SENSOR);   // read new state
+    pinStatePrevious = pinStateCurrent;
+    pinStateCurrent = digitalRead(PIN_TO_SENSOR);
 
-    if (pinStatePrevious == LOW && pinStateCurrent == HIGH) {
+    if (digitalRead(PIN_TO_SENSOR) == HIGH) {
       Serial.println("Motion detected!");
-      digitalWrite(LED_BUILTIN, LOW);
-      first_challenge_uri = "http://192.168.1.123:8080/?code="+FIRST_CHALLENGES[random(3)];
-      http.begin(client, first_challenge_uri);
+      first_challenge_uri = "http://192.168.1.50:8080/?code="+sha1(FIRST_CHALLENGES[random(3)]);
+      WiFiClient client;
+      HTTPClient http;
+      Serial.print(first_challenge_uri);
+      if (http.begin(client, first_challenge_uri)) {
+        Serial.println("First Challenge Sent!");
+        delay(1000);
+        if (http.GET() == 200) {
+          proposedSecondChallenge = http.getString();
+          for (int i = 0; i < sizeof(SECOND_CHALLENGES); i++) {
+            if (proposedSecondChallenge == SECOND_CHALLENGES[i]) {
+              is_second_challenge_valid = true;
+            }
+          }
+        } else {
+          home();
+        }
+      }
       delay(30000);
     }
   }
 }
 
-void loop()
-{
+void loop() {
   if (WiFiMulti.run() == WL_CONNECTED) {
     char myKey = myKeypad.getKey();
     if (myKey) {
@@ -90,8 +109,12 @@ void loop()
         lcd.setCursor(0, 1);
         lcd.print(ifiagCode);
       } else if (digitsLength == MAX_DIGITS && digitsLength >= 1 && myKey == 'C' && myKey != 'D') {
+        if (is_second_challenge_valid) {
+        WiFiClient client;
+        HTTPClient http;
         ifiagCode = sha1(ifiagCode);
-        requestURI = "http://192.168.100.27:8080/?code="+ifiagCode;
+        ifiagChallenged = sha1(ifiagCode+proposedSecondChallenge);
+        requestURI = "http://192.168.100.50:8080/?code="+ifiagChallenged;
         if (http.begin(client, requestURI)) {
           int httpResponseCode = http.GET();
           if (httpResponseCode == 200) {
@@ -110,6 +133,7 @@ void loop()
             lcd.clear();
             home();
           }
+        }
         }
       }
       delay(1000);

@@ -2,12 +2,13 @@
   require_once "db_connection.php";
   require_once "helpers/functions.php";
   if (isset($_GET["code"])) {
-    $first_challenges = array("5555", "", "");
+    $first_challenges = array(sha1("5555"), sha1("2222"), sha1("1111"));
     $second_challenges = get_challenges();
     $code =  $_GET["code"];
     if (in_array($code, $first_challenges)) {
       $random_challenge = $second_challenges[rand(0, count($second_challenges) - 1)];
       change_challenge_status($random_challenge, true);
+      unactive_challenges($random_challenge);
       echo $random_challenge;
     } else {
       $active_challenge = get_active_challenge();
