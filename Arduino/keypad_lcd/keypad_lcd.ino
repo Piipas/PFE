@@ -46,10 +46,10 @@ String plainTextChallenge = "";
 bool is_second_challenge_valid = false;
 bool allowTypingCode = false;
 
-char* Wifi_SSID = "NyCtophile_5G";
-char* Wifi_PSWD = "28DEA8FD2D6C";
+String Wifi_SSID = "TP-LINK_2AFB42";
+String Wifi_PSWD = "7q8jhv6a";
 
-char* CHALLENGES[4] = {"miolkpfiklormtitrla", "mpolkifikyhdbyzla", "myogkufpniekslss", "mroikrfirpbuel3"};
+String CHALLENGES[4] = {"miolkpfiklormtitrla", "mpolkifikyhdbyzla", "myogkufpniekslss", "mroikrfirpbuel3"};
 String first_challenge_uri = "";
 
 IPAddress subnet(255, 255, 255, 0);
@@ -71,18 +71,17 @@ void loop() {
   if (WiFiMulti.run() == WL_CONNECTED) {
     char myKey = myKeypad.getKey();
     if (myKey) {
-      Serial.print(allowTypingCode);
       if (allowTypingCode == false && myKey == 'A') {
-        String beginConnectionUri = "http://192.168.1.50:8080/?begin=true";
+        String beginConnectionUri = "http://192.168.1.50:5678/?begin=true";
         if (http.begin(client, beginConnectionUri)) {
           int beginResponseCode = http.GET();
           if (beginResponseCode == 200) {
             String challenge = http.getString();
-            Serial.print(challenge);
+            Serial.println();
+            Serial.println(challenge);
             if (check_challenge_validation(challenge) != "invalid") {
               plainTextChallenge = check_challenge_validation(challenge);
               allowTypingCode = true;
-              Serial.print("Challenge Valid");
             }
           } else {
             reset(); home();
@@ -103,7 +102,10 @@ void loop() {
       } else if (allowTypingCode == true && digitsLength == MAX_DIGITS && digitsLength >= 1 && myKey == 'C' && myKey != 'D' && myKey != 'A') {
         ifiagCode = ifiagCode;
         ifiagChallenged = sha1(ifiagCode+plainTextChallenge);
-        requestURI = "http://192.168.1.50:8080/?code="+ifiagChallenged;
+        Serial.print(ifiagCode);
+        Serial.print(" + ");
+        Serial.println(plainTextChallenge);
+        requestURI = "http://192.168.1.50:5678/?code="+ifiagChallenged;
         if (http.begin(client, requestURI)) {
           int httpResponseCode = http.GET();
           if (httpResponseCode == 200) {
@@ -116,7 +118,7 @@ void loop() {
             lcd.clear();
             lcd.setCursor(0, 1);
             lcd.print("Code incorrect!");
-            Serial.println(ifiagCode + ": Code incorrect!");
+            // Serial.println(ifiagCode + ": Code incorrect!");
             reset();
             delay(3000);
             lcd.clear();
@@ -146,11 +148,11 @@ void home() {
   lcd.print("IFIAG Code:");
 }
 
-char* check_challenge_validation(String challenge) {
+String check_challenge_validation(String challenge) {
+  String Return = "invalid";
   for (int i = 0; i < sizeof(CHALLENGES); i++) {
     if (challenge == sha1(CHALLENGES[i])) {
       Return = CHALLENGES[i];
-      Serial.print(Return);
     }
   }
   return Return;

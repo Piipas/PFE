@@ -27,16 +27,12 @@
     } else { header($_SERVER["SERVER_PROTOCOL"]." 403 Incorrect"); die; }
   }
 
-  function get_codes() {
+  function get_code() {
     global $pfe;
-    $get_codes = $pfe->prepare("SELECT * FROM codes");
-    $get_codes->execute();
-    $codes = $get_codes->fetchAll();
-    $codes_array = [];
-    foreach ($codes as $code) {
-      $codes_array[] = $code["code"];
-    }
-    return $codes_array;
+    $get_code = $pfe->prepare("SELECT * FROM codes");
+    $get_code->execute();
+    $code = $get_code->fetch();
+    return $code["code"];
   }
 
   function unactive_challenges(string $except_challenge) {
