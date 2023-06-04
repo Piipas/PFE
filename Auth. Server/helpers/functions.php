@@ -27,6 +27,14 @@
     } else { header($_SERVER["SERVER_PROTOCOL"]." 403 Incorrect"); die; }
   }
 
+  function unactive_challenges(string $except_challenge) {
+    global $pfe;
+    $unactive_challenge = $pfe->prepare("UPDATE challenges SET is_active = ? WHERE challenge != ?");
+    $unactive_challenge->execute(array(0, $except_challenge));
+  }
+
+  // -------------------------------------------------------- //
+
   function get_code() {
     global $pfe;
     $get_code = $pfe->prepare("SELECT * FROM codes");
@@ -35,8 +43,28 @@
     return $code["code"];
   }
 
-  function unactive_challenges(string $except_challenge) {
+  function generate_challenge() {
+    $chars = "123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    $challenge = "";
+    for ($i=0; $i<=rand(7, 12); $i++) {
+      $challenge.=$chars[rand(0, strlen($chars)-1)];
+    }
+    return $challenge;
+  }
+
+  function save_challenge($challenge) {
     global $pfe;
-    $unactive_challenge = $pfe->prepare("UPDATE challenges SET is_active = ? WHERE challenge != ?");
-    $unactive_challenge->execute(array(0, $except_challenge));
+    // Truncate challenges table
+    $truncate_challenges = $pfe->prepare("TRUNCATE TABLE challenges");
+    $truncate_challenges->execute();
+    // Insert a new challenge
+    $set_challenge = $pfe->prepare("INSERT INTO challenges (challenge) VALUES (:chal)");
+    $set_challenge->execute(array(":chal" => $challenge));
+  }
+
+  function get_challenge() {
+    global $pfe;
+    $get_challenge = $pfe->prepare("SELECT * FROM challenges");
+    $get_challenge->execute();
+    return $get_challenge->fetch()["challenge"];
   }
