@@ -41,15 +41,13 @@ const int MAX_DIGITS = 4;
 String ifiagCode = "";
 String ifiagChallenged = "";
 String requestURI;
-String proposedSecondChallenge = "";
-String plainTextChallenge = "";
+String challenge = "";
 bool is_second_challenge_valid = false;
 bool allowTypingCode = false;
 
 String Wifi_SSID = "TP-LINK_2AFB42";
 String Wifi_PSWD = "7q8jhv6a";
 
-String CHALLENGES[4] = {"miolkpfiklormtitrla", "mpolkifikyhdbyzla", "myogkufpniekslss", "mroikrfirpbuel3"};
 String first_challenge_uri = "";
 
 IPAddress subnet(255, 255, 255, 0);
@@ -76,11 +74,10 @@ void loop() {
         if (http.begin(client, beginConnectionUri)) {
           int beginResponseCode = http.GET();
           if (beginResponseCode == 200) {
-            String challenge = http.getString();
+            challenge = http.getString();
             Serial.println();
             Serial.println(challenge);
-            if (check_challenge_validation(challenge) != "invalid") {
-              plainTextChallenge = check_challenge_validation(challenge);
+            if (challenge) {
               allowTypingCode = true;
             }
           } else {
@@ -100,11 +97,10 @@ void loop() {
         lcd.setCursor(0, 1);
         lcd.print(ifiagCode);
       } else if (allowTypingCode == true && digitsLength == MAX_DIGITS && digitsLength >= 1 && myKey == 'C' && myKey != 'D' && myKey != 'A') {
-        ifiagCode = ifiagCode;
-        ifiagChallenged = sha1(ifiagCode+plainTextChallenge);
+        ifiagChallenged = sha1(ifiagCode+challenge);
         Serial.print(ifiagCode);
         Serial.print(" + ");
-        Serial.println(plainTextChallenge);
+        Serial.println(challenge);
         requestURI = "http://192.168.1.50:5678/?code="+ifiagChallenged;
         if (http.begin(client, requestURI)) {
           int httpResponseCode = http.GET();
@@ -140,20 +136,10 @@ void reset() {
   ifiagCode = "";
   digitsLength = 0;
   allowTypingCode = false;
-  plainTextChallenge = "";
+  challenge = "";
 }
 
 void home() {
   lcd.setCursor(0, 0);
   lcd.print("IFIAG Code:");
-}
-
-String check_challenge_validation(String challenge) {
-  String Return = "invalid";
-  for (int i = 0; i < sizeof(CHALLENGES); i++) {
-    if (challenge == sha1(CHALLENGES[i])) {
-      Return = CHALLENGES[i];
-    }
-  }
-  return Return;
 }
