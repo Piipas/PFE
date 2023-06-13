@@ -1,7 +1,7 @@
 #!Hello Dragan!#
 
 # This Rule should be added inside a built-in rules file, or a custom rules files but the file shoulld be defined in snort sonfiguration (snort.conf)
-snort arp cache overwrite rule: alert (msg:"ARP CACHE OVERWRITE ATTACK"; sid:4; gid:112; rev:1; metadata: rule-type preproc; classtype:bad-unknown;)
+alert (msg:"ARP CACHE OVERWRITE ATTACK"; sid:4; gid:112; rev:1; metadata: rule-type preproc; classtype:bad-unknown;)
 
 # The lines below describe the preprocessors we must add in snort configuration file to make snort detect second layer attack (ARP Spoofing)
 preprocessor arp_spoof
