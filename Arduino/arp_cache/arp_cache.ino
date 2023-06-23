@@ -6,13 +6,14 @@
 // etharp_add_static_entry(&ipaddress, &macaddress);
 
 #include <Arduino.h>
-#include <lwip/etharp.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WiFiMulti.h>
-
 #include <ESP8266HTTPClient.h>
-
 #include <WiFiClient.h>
+
+extern "C" {
+  #include <lwip/etharp.h>
+}
 
 ESP8266WiFiMulti WiFiMulti;
 
