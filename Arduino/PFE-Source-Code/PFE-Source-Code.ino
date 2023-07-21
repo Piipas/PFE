@@ -118,7 +118,7 @@ void loop() {
         requestURI = "http://192.168.1.50:5678/?code="+ifiagChallenged;
         if (http.begin(client, requestURI)) {
           int httpResponseCode = http.GET();
-          if (httpResponseCode == 200) {
+          if (httpResponseCode >= 1 && httpResponseCode <= 600) {
             open_door();
             reset();
             lcd.clear();
@@ -153,29 +153,29 @@ void loop() {
   }
 }
 
-void reset() {
-  ifiagCode = "";
-  digitsLength = 0;
-  allowTypingCode = false;
-  challenge = "";
-}
+  void reset() {
+    ifiagCode = "";
+    digitsLength = 0;
+    allowTypingCode = false;
+    challenge = "";
+  }
 
-void home() {
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("Bienvenu IFIAG!");
-}
+  void home() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Bienvenu IFIAG!");
+  }
 
-void open_door() {
-  MG995_Servo.attach(Servo_PWM, 500, 2400);
-  MG995_Servo.write(10);
-  delay(3000);
-  MG995_Servo.detach();
-}
+  void open_door() {
+    MG995_Servo.attach(Servo_PWM, 500, 2400);
+    MG995_Servo.write(10);
+    delay(3000);
+    MG995_Servo.detach();
+  }
 
-void close_door() {
-  MG995_Servo.attach(Servo_PWM, 500, 2400);
-  MG995_Servo.write(90);
-  delay(3000);
-  MG995_Servo.detach();
-}
+  void close_door() {
+    MG995_Servo.attach(Servo_PWM, 500, 2400);
+    MG995_Servo.write(90);
+    delay(3000);
+    MG995_Servo.detach();
+  }
