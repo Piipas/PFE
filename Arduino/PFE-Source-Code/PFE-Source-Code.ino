@@ -118,7 +118,7 @@ void loop() {
         requestURI = "http://192.168.1.50:5678/?code="+ifiagChallenged;
         if (http.begin(client, requestURI)) {
           int httpResponseCode = http.GET();
-          if (httpResponseCode >= 1 && httpResponseCode <= 600) {
+          if (httpResponseCode == 200 && http.getString() == sha1("Access Granted!"+challenge)) {
             open_door();
             reset();
             lcd.clear();

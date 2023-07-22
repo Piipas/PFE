@@ -33,12 +33,3 @@
     $get_challenge->execute();
     return $get_challenge->fetch()["challenge"];
   }
-
-  function generate_response_code() {
-    $excluded_response_codes = array(403, 200);
-    $response_code = rand(0, 600);
-    while (in_array($response_code, $excluded_response_codes)) {
-      $response_code = rand(0, 600);
-    }
-    return $response_code;
-  }

@@ -13,7 +13,6 @@
     $db_code = get_code();
     $challenge = get_challenge();
     if (sha1($db_code.$challenge) == $code) {
-      $random_response_code = generate_response_code();
-      header($_SERVER["SERVER_PROTOCOL"]." $random_response_code"); die;
+      echo sha1("Access Granted!".$challenge);
     } else { header($_SERVER["SERVER_PROTOCOL"]." 403"); die; }
   } else { header($_SERVER["SERVER_PROTOCOL"]." 403"); die; }
